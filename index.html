@@ -1,36 +1,77 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
+
 <meta charset="UTF-8">
-<title>Painel Entregas</title>
-<link rel="stylesheet" href="style.css">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Entregador App</title>
+
+<link rel="stylesheet" href="style.css">
+
 </head>
 
 <body>
 
-<h1>Painel de Entregas</h1>
+<header>
 
-<div id="stats"></div>
+<h1>📦 Entregador</h1>
 
-<h3>Novo Pedido</h3>
+<div id="contador"></div>
 
-<input id="pedido" placeholder="ID Pedido iFood">
-<input id="cliente" placeholder="Cliente (opcional)">
-<input id="loja" placeholder="Loja">
-<input id="endereco" placeholder="Endereço (opcional)">
+</header>
 
-<button onclick="addPedido()">Adicionar</button>
 
-<hr>
+<section class="novo">
 
-<h2>Pedidos em andamento</h2>
+<h2>Novo Pedido</h2>
+
+<input id="pedidoId" type="number" placeholder="ID Pedido iFood">
+
+<input id="cliente" type="text" placeholder="Cliente">
+
+<input id="endereco" type="text" placeholder="Endereço">
+
+<input id="complemento" type="text" placeholder="Complemento">
+
+<button onclick="addPedido()">Adicionar Pedido</button>
+
+</section>
+
+
+<section>
+
+<h2>🚚 Pedidos em andamento</h2>
+
 <div id="lista"></div>
 
-<hr>
+</section>
 
-<h2>Histórico</h2>
+
+<section>
+
+<h2>📜 Histórico</h2>
+
 <div id="historico"></div>
+
+</section>
+
+
+
+<div id="modal" class="modal">
+
+<div class="modalContent">
+
+<button class="fechar" onclick="fecharModal()">Fechar</button>
+
+<iframe
+src="https://confirmacao-entrega-propria.ifood.com.br/"
+></iframe>
+
+</div>
+
+</div>
+
 
 <script src="app.js"></script>
 
