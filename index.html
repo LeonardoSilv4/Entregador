@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Painel Entregas</title>
+<link rel="stylesheet" href="style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+
+<h1>Painel de Entregas</h1>
+
+<div id="stats"></div>
+
+<h3>Novo Pedido</h3>
+
+<input id="pedido" placeholder="ID Pedido iFood">
+<input id="cliente" placeholder="Cliente (opcional)">
+<input id="loja" placeholder="Loja">
+<input id="endereco" placeholder="Endereço (opcional)">
+
+<button onclick="addPedido()">Adicionar</button>
+
+<hr>
+
+<h2>Pedidos em andamento</h2>
+<div id="lista"></div>
+
+<hr>
+
+<h2>Histórico</h2>
+<div id="historico"></div>
+
+<script src="app.js"></script>
+
+</body>
+</html>
