@@ -15,6 +15,7 @@ let cliente = document.getElementById("cliente").value
 let endereco = document.getElementById("endereco").value
 let complemento = document.getElementById("complemento").value
 
+
 if(id.length < 8){
 
 alert("ID precisa ter no mínimo 8 dígitos")
@@ -46,37 +47,6 @@ document.getElementById("complemento").value = ""
 
 // 🔹 colocar cursor novamente no ID
 document.getElementById("pedidoId").focus()
-
-}
-
-let id = document.getElementById("pedidoId").value
-let cliente = document.getElementById("cliente").value
-let endereco = document.getElementById("endereco").value
-let complemento = document.getElementById("complemento").value
-
-
-if(id.length < 8){
-
-alert("ID precisa ter no mínimo 8 dígitos")
-return
-
-}
-
-let pedido = {
-
-id,
-cliente,
-endereco,
-complemento,
-data:new Date().toLocaleString()
-
-}
-
-pedidos.push(pedido)
-
-salvar()
-
-render()
 
 }
 
