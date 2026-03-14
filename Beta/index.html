@@ -1,0 +1,82 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Entregador App</title>
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<header>
+
+<h1>📦 Entregador</h1>
+
+<div id="contador"></div>
+
+</header>
+
+
+<section class="novo">
+
+<h2>Novo Pedido</h2>
+
+<input id="pedidoId" type="number" placeholder="ID Pedido iFood (mínimo 8 dígitos)">
+
+<input id="cliente" type="text" placeholder="Cliente">
+
+<input id="endereco" type="number" placeholder="Número do endereço">
+
+<select id="tipoLocal" onchange="mostrarApartamento()">
+<option value="casa">Casa</option>
+<option value="apartamento">Apartamento</option>
+</select>
+
+<input id="numeroAp" type="number" placeholder="Número do Apartamento" style="display:none">
+
+<button onclick="addPedido()">Adicionar Pedido</button>
+
+</section>
+
+
+<section>
+
+<h2>🚚 Pedidos em andamento</h2>
+
+<div id="lista"></div>
+
+</section>
+
+
+<section>
+
+<h2>📜 Histórico</h2>
+
+<div id="historico"></div>
+
+</section>
+
+
+<div id="modal" class="modal">
+
+<div class="modalContent">
+
+<button class="fechar" onclick="fecharModal()">Fechar</button>
+
+<iframe src="https://confirmacao-entrega-propria.ifood.com.br/"></iframe>
+
+</div>
+
+</div>
+
+
+<script src="app.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,224 @@
+
+let pedidos = JSON.parse(localStorage.getItem("pedidos")) || []
+let historico = JSON.parse(localStorage.getItem("historico")) || []
+
+function salvar(){
+
+localStorage.setItem("pedidos",JSON.stringify(pedidos))
+localStorage.setItem("historico",JSON.stringify(historico))
+
+}
+
+function mostrarApartamento(){
+
+let tipo = document.getElementById("tipoLocal").value
+let campoAp = document.getElementById("numeroAp")
+
+if(tipo === "apartamento"){
+
+campoAp.style.display = "block"
+
+}else{
+
+campoAp.style.display = "none"
+campoAp.value = ""
+
+}
+
+}
+
+function addPedido(){
+
+let id = document.getElementById("pedidoId").value
+let cliente = document.getElementById("cliente").value
+let endereco = document.getElementById("endereco").value
+let tipoLocal = document.getElementById("tipoLocal").value
+let numeroAp = document.getElementById("numeroAp").value
+
+if(id.length < 8){
+
+alert("ID precisa ter no mínimo 8 dígitos")
+return
+
+}
+
+let complemento = ""
+
+if(tipoLocal === "casa"){
+
+complemento = "Casa"
+
+}
+
+if(tipoLocal === "apartamento"){
+
+if(numeroAp === ""){
+
+alert("Digite o número do apartamento")
+return
+
+}
+
+complemento = "Apartamento " + numeroAp
+
+}
+
+let pedido = {
+
+id,
+cliente,
+endereco,
+complemento,
+data:new Date().toLocaleString()
+
+}
+
+pedidos.push(pedido)
+
+salvar()
+
+render()
+
+document.getElementById("pedidoId").value = ""
+document.getElementById("cliente").value = ""
+document.getElementById("endereco").value = ""
+document.getElementById("numeroAp").value = ""
+
+document.getElementById("pedidoId").focus()
+
+}
+
+function copiar(id){
+
+navigator.clipboard.writeText(id)
+alert("ID copiado")
+
+}
+
+function abrirModal(){
+
+document.getElementById("modal").style.display="flex"
+
+}
+
+function fecharModal(){
+
+document.getElementById("modal").style.display="none"
+
+}
+
+function editar(index){
+
+let p = pedidos[index]
+
+let novoId = prompt("ID do Pedido",p.id)
+let novoCliente = prompt("Cliente",p.cliente)
+let novoEndereco = prompt("Número do Endereço",p.endereco)
+let novoComplemento = prompt("Complemento (Casa ou Apartamento + número)",p.complemento)
+
+pedidos[index].id = novoId
+pedidos[index].cliente = novoCliente
+pedidos[index].endereco = novoEndereco
+pedidos[index].complemento = novoComplemento
+
+salvar()
+
+render()
+
+}
+
+function finalizar(index){
+
+let pedido = pedidos[index]
+
+historico.push(pedido)
+
+pedidos.splice(index,1)
+
+salvar()
+
+render()
+
+}
+
+function render(){
+
+let lista = document.getElementById("lista")
+
+lista.innerHTML=""
+
+pedidos.forEach((p,i)=>{
+
+lista.innerHTML += `
+
+<div class="card">
+
+<h3>Pedido ${p.id}</h3>
+
+<p><b>Cliente:</b> ${p.cliente}</p>
+
+<p><b>Endereço:</b> ${p.endereco}</p>
+
+<p><b>Complemento:</b> ${p.complemento}</p>
+
+<div class="botoes">
+
+<button onclick="abrirModal()">Confirmar pelo iFood</button>
+
+<button onclick="copiar('${p.id}')">Copiar ID</button>
+
+<button onclick="editar(${i})">Editar</button>
+
+<button class="finalizar" onclick="finalizar(${i})">Finalizar Pedido</button>
+
+</div>
+
+</div>
+
+`
+
+})
+
+let h = document.getElementById("historico")
+
+h.innerHTML=""
+
+historico.slice().reverse().forEach(p=>{
+
+h.innerHTML += `
+
+<div class="card">
+
+<h3>Pedido ${p.id}</h3>
+
+<p><b>Cliente:</b> ${p.cliente}</p>
+
+<p><b>Endereço:</b> ${p.endereco}</p>
+
+<p><b>Complemento:</b> ${p.complemento}</p>
+
+<p><b>Finalizado:</b> ${p.data}</p>
+
+</div>
+
+`
+
+})
+
+document.getElementById("contador").innerHTML=
+`
+🚚 Em andamento: ${pedidos.length}
+📦 Finalizados: ${historico.length}
+`
+
+}
+
+document.addEventListener("input",function(e){
+
+if(e.target.id==="pedidoId" || e.target.id==="endereco" || e.target.id==="numeroAp"){
+e.target.value = e.target.value.replace(/[^0-9]/g,"")
+}
+
+})
+
+render()
