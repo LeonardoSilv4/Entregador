@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Entregas</title>
+<style>
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f5f5f7;color:#1d1d1f;font-size:20px}
+.header{padding:12px;text-align:center;font-weight:bold;font-size:22px}
+.tabs{position:fixed;bottom:0;width:100%;display:flex;background:#fff;border-top:1px solid #ccc}
+.tab{flex:1;padding:12px;text-align:center;cursor:pointer;font-size:16px}
+.active{font-weight:bold}
+.container{padding:12px;padding-bottom:80px}
+.card{background:#fff;padding:14px;margin-bottom:12px;border-radius:12px;box-shadow:0 2px 5px rgba(0,0,0,0.1);font-size:18px}
+button{margin-top:8px;padding:10px;border:none;border-radius:10px;cursor:pointer;font-size:16px}
+.add{position:fixed;bottom:90px;right:20px;width:60px;height:60px;border-radius:50%;font-size:28px}
+.modal{position:fixed;top:0;left:0;width:100%;height:100%;background:#fff;display:none;flex-direction:column;padding:12px}
+input,textarea{width:100%;padding:12px;margin:6px 0;font-size:18px}
+.success{color:green;font-weight:bold}
+.danger{color:red;font-weight:bold}
+</style>
+</head>
+<body>
+<div class="header">App de Entregas</div>
+<div id="app" class="container"></div>
+
+<button class="add" onclick="openModal()">+</button>
+
+<div class="tabs">
+<div class="tab active" onclick="setTab('pedidos')">Pedidos</div>
+<div class="tab" onclick="setTab('historico')">Histórico</div>
+<div class="tab" onclick="setTab('ferramenta')">Ferramenta</div>
+</div>
+
+<div id="modal" class="modal">
+<h3>Pedido</h3>
+<input id="id" placeholder="ID (8 números)" inputmode="numeric" maxlength="8"
+oninput="this.value=this.value.replace(/\D/g,'').slice(0,8)">
+<input id="nome" placeholder="Nome">
+<input id="numero" placeholder="Número">
+<input id="apto" placeholder="Apartamento">
+<input id="valor" placeholder="Valor R$" inputmode="decimal"
+oninput="this.value=this.value.replace(/[^0-9.]/g,'')">
+<button onclick="savePedido()">Salvar</button>
+<button onclick="closeModal()">Fechar</button>
+</div>
+
+<div id="iframeModal" class="modal">
+<button onclick="closeIframe()">Fechar</button>
+<iframe id="iframe" style="flex:1;border:none"></iframe>
+</div>
+
+<script>
+let pedidos = JSON.parse(localStorage.getItem('pedidos')||'[]')
+let historico = JSON.parse(localStorage.getItem('historico')||'[]')
+let tab = 'pedidos'
+let editIndex = null
+
+function saveLocal(){
+localStorage.setItem('pedidos',JSON.stringify(pedidos))
+localStorage.setItem('historico',JSON.stringify(historico))
+}
+
+function setTab(t){tab=t;render()}
+
+function render(){
+let app=document.getElementById('app')
+app.innerHTML=''
+if(tab==='pedidos'){
+pedidos.forEach((p,i)=>{
+let div=document.createElement('div')
+div.className='card'
+let tipo = p.id.length===8 ? '<span class="danger">IFOOD</span>' : 'DA CASA'
+let pagamento = p.valor ? `<span class="danger">${p.valor}</span>` : '<span class="success">PAGO</span>'
+let apto = p.apto || 'CASA'
+div.innerHTML=`
+<b>PEDIDO:</b> ${tipo}<br>
+<b>NOME:</b> ${p.nome}<br>
+<b>NUMERO:</b> ${p.numero}<br>
+<b>APARTAMENTO:</b> ${apto}<br>
+<b>PAGAMENTO:</b> ${pagamento}<br>
+<button onclick="confirmar(${i})">Confirmar</button>
+<button onclick="editar(${i})">Editar</button>
+`
+app.appendChild(div)
+})
+}
+
+if(tab==='historico'){
+historico.forEach(p=>{
+let div=document.createElement('div')
+div.className='card'
+div.innerText=p.nome
+app.appendChild(div)
+})
+let btn=document.createElement('button')
+btn.innerText='Zerar histórico'
+btn.onclick=()=>{historico=[];saveLocal();render()}
+app.appendChild(btn)
+}
+
+if(tab==='ferramenta'){
+let textarea=document.createElement('textarea')
+let btn=document.createElement('button')
+btn.innerText='Extrair endereço'
+let list=document.createElement('div')
+btn.onclick=()=>{
+let txt=textarea.value
+let match=txt.match(/([A-Za-zÀ-ú\.\s]+,\s?\d+\s?-\s?[A-Za-zÀ-ú\s]+)/)
+if(match){
+let endereco=match[1]
+let card=document.createElement('div')
+card.className='card'
+card.innerText=endereco
+card.onclick=()=>{
+navigator.clipboard.writeText(endereco)
+alert('Copiado!')
+}
+let del=document.createElement('button')
+del.innerText='Excluir'
+del.onclick=(e)=>{e.stopPropagation();card.remove()}
+card.appendChild(del)
+list.appendChild(card)
+}
+}
+app.appendChild(textarea)
+app.appendChild(btn)
+app.appendChild(list)
+}
+}
+
+function openModal(){
+if(editIndex===null){
+document.getElementById('id').value=''
+document.getElementById('nome').value=''
+document.getElementById('numero').value=''
+document.getElementById('apto').value=''
+document.getElementById('valor').value=''
+}
+document.getElementById('modal').style.display='flex'
+}
+function closeModal(){
+document.getElementById('modal').style.display='none'
+editIndex=null
+}
+
+function savePedido(){
+let idVal=document.getElementById('id').value.replace(/\D/g,'').slice(0,8)
+let valorVal=document.getElementById('valor').value.replace(/[^0-9.]/g,'')
+
+let p={
+id:idVal,
+nome:document.getElementById('nome').value,
+numero:document.getElementById('numero').value,
+apto:document.getElementById('apto').value,
+valor:valorVal
+}
+
+if(editIndex!==null){pedidos[editIndex]=p;editIndex=null}else{pedidos.unshift(p)}
+saveLocal();closeModal();render()
+}
+
+function editar(i){
+let p=pedidos[i]
+document.getElementById('id').value=p.id
+document.getElementById('nome').value=p.nome
+document.getElementById('numero').value=p.numero
+document.getElementById('apto').value=p.apto
+document.getElementById('valor').value=p.valor
+editIndex=i
+openModal()
+}
+
+function confirmar(i){
+let p=pedidos[i]
+if(p.id.length===8){
+navigator.clipboard.writeText(p.id)
+document.getElementById('iframe').src='https://confirmacao-entrega-propria.ifood.com.br/numero-pedido'
+document.getElementById('iframeModal').style.display='flex'
+}else{
+if(confirm('Pedido concluído?')){
+historico.unshift(p)
+pedidos.splice(i,1)
+saveLocal();render()
+}
+}
+}
+
+function closeIframe(){
+document.getElementById('iframeModal').style.display='none'
+if(confirm('Pedido concluído?')){
+pedidos.shift()
+historico.unshift()
+saveLocal();render()
+}
+}
+
+render()
+</script>
+</body>
+</html>
