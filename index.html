@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
+<link rel="manifest" href="manifest.json">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>App de Entregas</title>
@@ -28,8 +29,8 @@ input,textarea{width:100%;padding:12px;margin:6px 0;font-size:18px}
 
 <div class="tabs">
 <div class="tab active" onclick="setTab('pedidos')">Pedidos</div>
+<div class="tab" onclick="setTab('ferramenta')">Adicionar</div>
 <div class="tab" onclick="setTab('historico')">Histórico</div>
-<div class="tab" onclick="setTab('ferramenta')">Ferramenta</div>
 </div>
 
 <div id="modal" class="modal">
@@ -41,6 +42,16 @@ input,textarea{width:100%;padding:12px;margin:6px 0;font-size:18px}
 <input id="valor" placeholder="Valor R$" inputmode="decimal" oninput="this.value=this.value.replace(/[^0-9.]/g,'')">
 <button onclick="savePedido()">Salvar</button>
 <button onclick="closeModal()">Fechar</button>
+</div>
+
+<div id="iframeModal" class="modal">
+<button onclick="fecharIframe()">Fechar</button>
+
+<button onclick="reabrirIfood()" style="background:#ff3b30">
+Ir para confirmação novamente
+</button>
+
+<iframe id="iframe" style="flex:1;border:none"></iframe>
 </div>
 
 <script>
@@ -87,6 +98,9 @@ ${p.bairro?`<b>BAIRRO:</b> ${p.bairro}<br>`:''}
 <b>PAGAMENTO:</b> ${pagamento}<br>
 <button onclick="confirmar(${i})">Confirmar</button>
 <button onclick="editar(${i})">Editar</button>
+${p.endereco && p.numero ? 
+`<button onclick="abrirMaps(${i})">Abrir no Google Maps</button>` 
+: ''}
 `
 app.appendChild(div)
 })
@@ -108,7 +122,7 @@ render()
 
 app.appendChild(btn)
 
-// lista de histórico
+// lista
 historico.forEach(p=>{
 let div=document.createElement('div')
 div.className='card'
@@ -117,6 +131,7 @@ div.innerHTML=`
 <b>NOME:</b> ${p.nome}<br>
 ${p.endereco?`<b>ENDEREÇO:</b> ${p.endereco}, ${p.numero}<br>`:''}
 ${p.bairro?`<b>BAIRRO:</b> ${p.bairro}<br>`:''}
+${p.id?`<b>PEDIDO:</b> ${p.id.length===8 ? '<span class="danger">IFOOD</span>' : 'DA CASA'}<br>`:''}
 `
 
 app.appendChild(div)
@@ -217,16 +232,31 @@ editIndex=null
 }
 
 function savePedido(){
-let p={
-id:document.getElementById('id').value,
-nome:document.getElementById('nome').value,
-numero:document.getElementById('numero').value,
-apto:document.getElementById('apto').value,
-valor:document.getElementById('valor').value
+
+let antigo = editIndex !== null ? pedidos[editIndex] : {}
+
+let p = {
+id: document.getElementById('id').value,
+nome: document.getElementById('nome').value,
+numero: document.getElementById('numero').value,
+apto: document.getElementById('apto').value,
+valor: document.getElementById('valor').value,
+
+// 🔥 MANTÉM OS DADOS ANTIGOS
+endereco: antigo.endereco || '',
+bairro: antigo.bairro || ''
 }
 
-if(editIndex!==null){pedidos[editIndex]=p;editIndex=null}else{pedidos.unshift(p)}
-saveLocal();closeModal();render()
+if(editIndex!==null){
+pedidos[editIndex] = p
+editIndex = null
+}else{
+pedidos.unshift(p)
+}
+
+saveLocal()
+closeModal()
+render()
 }
 
 function editar(i){
@@ -244,10 +274,23 @@ function confirmar(i){
 let p=pedidos[i]
 
 if(p.id.length===8){
+
+// copia ID
 navigator.clipboard.writeText(p.id)
-alert('ID copiado! Confirme no iFood.')
+
+// guarda índice do pedido atual
+window.pedidoAtual = i
+
+// abre iframe
+document.getElementById('iframe').src =
+'https://confirmacao-entrega-propria.ifood.com.br/numero-pedido'
+
+document.getElementById('iframeModal').style.display='flex'
+
+return
 }
 
+// pedido da casa
 if(confirm('Pedido concluído?')){
 historico.unshift(p)
 pedidos.splice(i,1)
@@ -256,7 +299,43 @@ render()
 }
 }
 
+function fecharIframe(){
+
+document.getElementById('iframeModal').style.display='none'
+
+if(confirm('Pedido concluído?')){
+
+let i = window.pedidoAtual
+let p = pedidos[i]
+
+historico.unshift(p)
+pedidos.splice(i,1)
+
+saveLocal()
+render()
+}
+}
+
+function reabrirIfood(){
+document.getElementById('iframe').src =
+'https://confirmacao-entrega-propria.ifood.com.br/numero-pedido'
+}
+
+function abrirMaps(i){
+let p = pedidos[i]
+
+let endereco = `${p.endereco} ${p.numero} ${p.bairro || ''}`
+
+// abre no maps
+window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(endereco)}`,'_blank')
+}
+
 render()
 </script>
 </body>
+<script>
+if('serviceWorker' in navigator){
+navigator.serviceWorker.register('service-worker.js')
+}
+</script>
 </html>
