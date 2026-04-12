@@ -1,79 +1,262 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
-
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<title>Entregador App</title>
-
-<link rel="stylesheet" href="style.css">
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>App de Entregas</title>
+<style>
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f5f5f7;color:#1d1d1f;font-size:20px}
+.header{padding:12px;text-align:center;font-weight:bold;font-size:22px}
+.tabs{position:fixed;bottom:0;width:100%;display:flex;background:#fff;border-top:1px solid #ccc}
+.tab{flex:1;padding:12px;text-align:center;cursor:pointer;font-size:16px}
+.active{font-weight:bold}
+.container{padding:12px;padding-bottom:80px}
+.card{background:#fff;padding:14px;margin-bottom:12px;border-radius:12px;box-shadow:0 2px 5px rgba(0,0,0,0.1);font-size:18px}
+button{margin-top:8px;padding:10px;border:none;border-radius:10px;cursor:pointer;font-size:16px}
+.add{position:fixed;bottom:90px;right:20px;width:60px;height:60px;border-radius:50%;font-size:28px}
+.modal{position:fixed;top:0;left:0;width:100%;height:100%;background:#fff;display:none;flex-direction:column;padding:12px}
+input,textarea{width:100%;padding:12px;margin:6px 0;font-size:18px}
+.success{color:green;font-weight:bold}
+.danger{color:red;font-weight:bold}
+</style>
 </head>
-
 <body>
+<div class="header">App de Entregas</div>
+<div id="app" class="container"></div>
 
-<header>
+<button class="add" onclick="openModal()">+</button>
 
-<h1>📦 Entregador</h1>
-
-<div id="contador"></div>
-
-</header>
-
-
-<section class="novo">
-
-<h2>Novo Pedido</h2>
-
-<input id="pedidoId" type="number" placeholder="ID Pedido iFood">
-
-<input id="cliente" type="text" placeholder="Cliente">
-
-<input id="endereco" type="text" placeholder="Endereço">
-
-<input id="complemento" type="text" placeholder="Complemento">
-
-<button onclick="addPedido()">Adicionar Pedido</button>
-
-</section>
-
-
-<section>
-
-<h2>🚚 Pedidos em andamento</h2>
-
-<div id="lista"></div>
-
-</section>
-
-
-<section>
-
-<h2>📜 Histórico</h2>
-
-<div id="historico"></div>
-
-</section>
-
-
+<div class="tabs">
+<div class="tab active" onclick="setTab('pedidos')">Pedidos</div>
+<div class="tab" onclick="setTab('historico')">Histórico</div>
+<div class="tab" onclick="setTab('ferramenta')">Ferramenta</div>
+</div>
 
 <div id="modal" class="modal">
-
-<div class="modalContent">
-
-<button class="fechar" onclick="fecharModal()">Fechar</button>
-
-<iframe
-src="https://confirmacao-entrega-propria.ifood.com.br/"
-></iframe>
-
+<h3>Pedido</h3>
+<input id="id" placeholder="ID (8 números)" inputmode="numeric" maxlength="8" oninput="this.value=this.value.replace(/\D/g,'').slice(0,8)">
+<input id="nome" placeholder="Nome">
+<input id="numero" placeholder="Número">
+<input id="apto" placeholder="Apartamento">
+<input id="valor" placeholder="Valor R$" inputmode="decimal" oninput="this.value=this.value.replace(/[^0-9.]/g,'')">
+<button onclick="savePedido()">Salvar</button>
+<button onclick="closeModal()">Fechar</button>
 </div>
 
-</div>
+<script>
+let pedidos = JSON.parse(localStorage.getItem('pedidos')||'[]')
+let historico = JSON.parse(localStorage.getItem('historico')||'[]')
+let tab = 'pedidos'
+let editIndex = null
 
+function saveLocal(){
+localStorage.setItem('pedidos',JSON.stringify(pedidos))
+localStorage.setItem('historico',JSON.stringify(historico))
+}
 
-<script src="app.js"></script>
+function setTab(t){tab=t;render()}
 
+function render(){
+let app=document.getElementById('app')
+app.innerHTML=''
+
+if(tab==='pedidos'){
+let rotaBtn=document.createElement('button')
+rotaBtn.innerText='Iniciar Rota'
+rotaBtn.onclick=()=>{
+let destinos = pedidos.map(p=>`${p.endereco||''} ${p.numero||''} ${p.bairro||''}`).join('/')
+window.open(`https://www.google.com/maps/dir/${destinos}`,'_blank')
+}
+app.appendChild(rotaBtn)
+
+pedidos.forEach((p,i)=>{
+let div=document.createElement('div')
+div.className='card'
+
+let tipo = p.id.length===8 ? '<span class="danger">IFOOD</span>' : 'DA CASA'
+let pagamento = p.valor ? `<span class="danger">${p.valor}</span>` : '<span class="success">PAGO</span>'
+let apto = p.apto || 'CASA'
+
+div.innerHTML=`
+<b>PEDIDO:</b> ${tipo}<br>
+<b>NOME:</b> ${p.nome}<br>
+${p.endereco?`<b>ENDEREÇO:</b> ${p.endereco}<br>`:''}
+${p.numero?`<b>NUMERO:</b> ${p.numero}<br>`:''}
+${p.bairro?`<b>BAIRRO:</b> ${p.bairro}<br>`:''}
+<b>APARTAMENTO:</b> ${apto}<br>
+<b>PAGAMENTO:</b> ${pagamento}<br>
+<button onclick="confirmar(${i})">Confirmar</button>
+<button onclick="editar(${i})">Editar</button>
+`
+app.appendChild(div)
+})
+}
+
+if(tab==='historico'){
+
+// botão zerar histórico
+let btn=document.createElement('button')
+btn.innerText='Zerar histórico'
+
+btn.onclick=()=>{
+if(confirm('Tem certeza que deseja apagar todo o histórico?')){
+historico=[]
+saveLocal()
+render()
+}
+}
+
+app.appendChild(btn)
+
+// lista de histórico
+historico.forEach(p=>{
+let div=document.createElement('div')
+div.className='card'
+
+div.innerHTML=`
+<b>NOME:</b> ${p.nome}<br>
+${p.endereco?`<b>ENDEREÇO:</b> ${p.endereco}, ${p.numero}<br>`:''}
+${p.bairro?`<b>BAIRRO:</b> ${p.bairro}<br>`:''}
+`
+
+app.appendChild(div)
+})
+
+}
+
+if(tab==='ferramenta'){
+let textarea=document.createElement('textarea')
+let btn=document.createElement('button')
+btn.innerText='Adicionar Pedido'
+
+btn.onclick=()=>{
+let txt=textarea.value
+
+let linhas=txt.split('\n').map(l=>l.trim()).filter(l=>l)
+
+// 🔍 NOME (primeira linha válida sem número)
+let nome = linhas.find(l => !/\d/.test(l) && l.length > 3) || ''
+
+// 🔍 ENDEREÇO (linha com número + rua/av)
+let linhaEndereco = linhas.find(l =>
+/(rua|av|avenida|r\.)/i.test(l) && /\d+/.test(l)
+) || ''
+
+// 🧠 REGEX MAIS FORTE
+let match = linhaEndereco.match(/([A-Za-zÀ-ú.\s]+),\s?(\d+)\s?-?\s?([A-Za-zÀ-ú\s]*)/)
+
+let endereco='', numero='', bairro=''
+
+if(match){
+endereco = match[1]
+.replace(/^R\./i,'Rua')
+.replace(/^Av\./i,'Avenida')
+.trim()
+
+numero = match[2]
+
+bairro = match[3].trim()
+}
+
+// 🔍 CASO O BAIRRO VENHA EM OUTRA LINHA
+if(!bairro){
+let linhaBairro = linhas.find(l =>
+!/^\d+$/.test(l) &&
+!/rua|av|avenida/i.test(l) &&
+l.length > 3 &&
+l.includes(',')
+)
+
+if(linhaBairro){
+bairro = linhaBairro.split(',')[0].trim()
+}
+}
+
+// 🔍 APARTAMENTO
+let aptoMatch = txt.match(/(apto|apart|casa)\s?(\d+)/i)
+let apto = aptoMatch ? aptoMatch[2] : ''
+
+// 🔍 PAGAMENTO
+let valorMatch = txt.match(/(\d+[\.,]\d+)/)
+let valor = valorMatch ? valorMatch[1].replace(',','.') : ''
+
+// 🚀 SALVA CERTO AGORA
+pedidos.unshift({
+id:'',
+nome,
+endereco,
+numero,
+bairro,
+apto,
+valor
+})
+
+saveLocal()
+render()
+}
+
+app.appendChild(textarea)
+app.appendChild(btn)
+}
+}
+
+function openModal(){
+if(editIndex===null){
+document.getElementById('id').value=''
+document.getElementById('nome').value=''
+document.getElementById('numero').value=''
+document.getElementById('apto').value=''
+document.getElementById('valor').value=''
+}
+document.getElementById('modal').style.display='flex'
+}
+
+function closeModal(){
+document.getElementById('modal').style.display='none'
+editIndex=null
+}
+
+function savePedido(){
+let p={
+id:document.getElementById('id').value,
+nome:document.getElementById('nome').value,
+numero:document.getElementById('numero').value,
+apto:document.getElementById('apto').value,
+valor:document.getElementById('valor').value
+}
+
+if(editIndex!==null){pedidos[editIndex]=p;editIndex=null}else{pedidos.unshift(p)}
+saveLocal();closeModal();render()
+}
+
+function editar(i){
+let p=pedidos[i]
+document.getElementById('id').value=p.id
+document.getElementById('nome').value=p.nome
+document.getElementById('numero').value=p.numero
+document.getElementById('apto').value=p.apto
+document.getElementById('valor').value=p.valor
+editIndex=i
+openModal()
+}
+
+function confirmar(i){
+let p=pedidos[i]
+
+if(p.id.length===8){
+navigator.clipboard.writeText(p.id)
+alert('ID copiado! Confirme no iFood.')
+}
+
+if(confirm('Pedido concluído?')){
+historico.unshift(p)
+pedidos.splice(i,1)
+saveLocal()
+render()
+}
+}
+
+render()
+</script>
 </body>
 </html>
