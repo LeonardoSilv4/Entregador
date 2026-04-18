@@ -107,8 +107,27 @@ if(tab==='pedidos'){
 let rotaBtn=document.createElement('button')
 rotaBtn.innerText='Iniciar Rota'
 rotaBtn.onclick=()=>{
-let destinos = pedidos.map(p=>`${p.endereco||''} ${p.numero||''} ${p.bairro||''}`).join('/')
-window.open(`https://www.google.com/maps/dir/${destinos}`,'_blank')
+
+let lista = pedidos
+.filter(p => p.endereco && p.numero)
+.map(p => `${p.endereco} ${p.numero} ${p.bairro || ''}`)
+
+if(lista.length === 0){
+alert('Nenhum endereço válido')
+return
+}
+
+// último destino
+let destinoFinal = lista[lista.length - 1]
+
+// intermediários
+let waypoints = lista.slice(0, -1).join('|')
+
+// 🔥 origem automática = sua localização
+let url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destinoFinal)}&waypoints=${encodeURIComponent(waypoints)}`
+
+window.open(url, '_blank')
+}
 }
 app.appendChild(rotaBtn)
 
