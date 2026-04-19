@@ -106,6 +106,7 @@ app.innerHTML=''
 if(tab==='pedidos'){
 let rotaBtn=document.createElement('button')
 rotaBtn.innerText='Iniciar Rota'
+
 rotaBtn.onclick=()=>{
 
 let lista = pedidos
@@ -128,7 +129,8 @@ let url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURICompone
 
 window.open(url, '_blank')
 }
-}
+
+// ✅ agora está no lugar certo
 app.appendChild(rotaBtn)
 
 pedidos.forEach((p,i)=>{
