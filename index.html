@@ -263,8 +263,30 @@ saveLocal()
 render()
 }
 
-app.appendChild(textarea)
-app.appendChild(btn)
+let wrapper = document.createElement('div')
+wrapper.style.display = 'flex'
+wrapper.style.flexDirection = 'column'
+wrapper.style.alignItems = 'center'
+wrapper.style.justifyContent = 'center'
+wrapper.style.height = '60vh'
+wrapper.style.gap = '12px'
+
+textarea.style.maxWidth = '500px'
+textarea.style.width = '100%'
+textarea.style.height = '150px'
+textarea.style.resize = 'none'
+
+btn.style.width = '80%'
+btn.style.maxWidth = '400px'
+btn.style.padding = '16px'
+btn.style.fontSize = '18px'
+btn.style.fontWeight = 'bold'
+
+wrapper.appendChild(textarea)
+wrapper.appendChild(btn)
+
+app.appendChild(wrapper)
+
 }
 }
 
