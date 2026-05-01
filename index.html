@@ -241,7 +241,7 @@ bairro = linhaBairro.split(',')[0].trim()
 }
 
 // 🔍 APARTAMENTO
-let aptoMatch = txt.match(/(apto|apart|casa)\s?(\d+)/i)
+let aptoMatch = txt.match(/(apto|apt|apartamento|apart|casa)\s*[:\-]?\s*(\d+)/i)
 let apto = aptoMatch ? aptoMatch[2] : ''
 
 // 🔍 PAGAMENTO
